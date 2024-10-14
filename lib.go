@@ -116,7 +116,7 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 			}
 			html += "</select>"
 		} else if obj["fieldtype"] == "text" {
-			html += fmt.Sprintf("<textarea id='id_%' name='%s'")
+			html += fmt.Sprintf("<textarea id='id_%s' name='%s'", obj["name"], obj["name"])
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
 			}
