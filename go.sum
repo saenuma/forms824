@@ -1,0 +1,8 @@
+github.com/adam-hanna/arrayOperations v1.0.1 h1:iAot3I2p4yKrFk8eRhEkuHj0ttOrfFJMWAo7Is/rHwk=
+github.com/adam-hanna/arrayOperations v1.0.1/go.mod h1:nScFkGwh89OyLY/cnXdx/S1maSqxhSXz38so1JxsChQ=
+github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
+github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
+github.com/saenuma/flaarum v1.12.5 h1:VSIoLzKEdjZHb4yCBpMmYScZIB1nZjyBDi1SoVh8+rw=
+github.com/saenuma/flaarum v1.12.5/go.mod h1:qgX9srfW5GtUEQ1wUqA4GV2zXWXXtqNnQZIIflFmgSU=
+github.com/saenuma/zazabul v1.1.4 h1:tVzr+yeGCBU/8Xc5S9iBLdwoJIDw4dyGUiPokHRAO24=
+github.com/saenuma/zazabul v1.1.4/go.mod h1:So2GPJYEbfm5PXuHmhyjSfG1JH8oEamRWOi3aLdN0q4=
