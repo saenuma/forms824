@@ -80,7 +80,7 @@ func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
 	return F8Object{formObjectsPath, cl}, nil
 }
 
-func (f8o *F8Object) GetNewForm(formName string) (string, error) {
+func (f8o *F8Object) getFormObjects(formName string) ([]map[string]string, error) {
 	if !strings.HasSuffix(formName, ".f8p") {
 		formName += ".f8p"
 	}
@@ -88,14 +88,28 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 
 	rawJSON, err := os.ReadFile(formPath)
 	if err != nil {
-		return "", errors.Wrap(err, "json error")
+		return nil, errors.Wrap(err, "json error")
 	}
 
 	formObjects := make([]map[string]string, 0)
 	json.Unmarshal(rawJSON, &formObjects)
 
+	return formObjects, nil
+}
+
+func (f8o *F8Object) GetNewForm(formName string) (string, error) {
+
+	formObjects, err := f8o.getFormObjects(formName)
+	if err != nil {
+		return "", err
+	}
+
 	var html string
 	for _, obj := range formObjects {
+		if slices.Index(strings.Split(obj["attributes"], ";"), "hidden") != -1 {
+			continue
+		}
+
 		html += "<div>"
 		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
 		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
@@ -121,6 +135,60 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 				html += " required"
 			}
 			html += "><textarea/>"
+		}
+		html += "</div>"
+	}
+
+	return html, nil
+}
+
+
+func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (string, error) {
+	formObjects, err := f8o.getFormObjects(formName)
+	if err != nil {
+		return "", err
+	}
+
+	var html string
+	for _, obj := range formObjects {
+		if slices.Index(strings.Split(obj["attributes"], ";"), "hidden") != -1 {
+			continue
+		}
+		var currentOldData string
+		tmpValue, ok := oldData[obj["name"]]
+		if ok {
+			currentOldData = tmpValue
+		}
+		
+		html += "<div>"
+		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
+		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
+			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' value='%s'", obj["fieldtype"],
+				obj["name"], obj["name"], currentOldData)
+			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
+				html += " required"
+			}
+			html += "/>"
+		} else if obj["fieldtype"] == "select" {
+			html += fmt.Sprintf("<select id='id_%s' name='%s'", obj["name"], obj["name"])
+			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
+				html += " required"
+			}
+			html += ">"
+			for _, opt := range strings.Split(obj["select_options"], "\n") {
+				if opt == currentOldData {
+					html += "<option selected='true'>" + opt + "</option>"
+				} else {
+					html += "<option>" + opt + "</option>"					
+				}
+			}
+			html += "</select>"
+		} else if obj["fieldtype"] == "text" {
+			html += fmt.Sprintf("<textarea id='id_%s' name='%s'", obj["name"], obj["name"])
+			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
+				html += " required"
+			}
+			html += ">" + currentOldData + "<textarea/>"
 		}
 		html += "</div>"
 	}
