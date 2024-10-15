@@ -332,6 +332,7 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 	return html, nil
 }
 
+// multi_display_select returns a string joined by ';' because this field can have a list as its value
 func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[string]string, error) {
 	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
 	if err != nil {
