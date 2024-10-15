@@ -188,7 +188,11 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 		html += "<div>"
 		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
 		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
-			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' ", obj["fieldtype"],
+			fieldType := obj["fieldtype"]
+			if fieldType == "datetime" {
+				fieldType += "-local"
+			}
+			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' ", fieldType,
 				obj["name"], obj["name"])
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
@@ -204,12 +208,29 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 				html += "<option>" + opt + "</option>"
 			}
 			html += "</select>"
+		} else if obj["fieldtype"] == "multi_display_select" {
+			html += "<div>"
+			for _, opt := range strings.Split(obj["select_options"], "\n") {
+				html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+					obj["name"], opt, opt)
+			}
+			html += "</div>"
+		} else if obj["fieldtype"] == "single_display_select" {
+			html += "<div>"
+			for _, opt := range strings.Split(obj["select_options"], "\n") {
+				html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+					obj["name"], opt, opt)
+			}
+			html += "</div>"
 		} else if obj["fieldtype"] == "text" {
 			html += fmt.Sprintf("<textarea id='id_%s' name='%s'", obj["name"], obj["name"])
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
 			}
 			html += "><textarea/>"
+		} else if obj["fieldtype"] == "check" {
+			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' /> %s", obj["name"], 
+				obj["name"], obj["label"])
 		}
 		html += "</div>"
 	}
@@ -238,7 +259,11 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 		html += "<div>"
 		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
 		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
-			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' value='%s'", obj["fieldtype"],
+			fieldType := obj["fieldtype"]
+			if fieldType == "datetime" {
+				fieldType += "-local"
+			}
+			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' value='%s'", fieldType,
 				obj["name"], obj["name"], currentOldData)
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
@@ -258,12 +283,48 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 				}
 			}
 			html += "</select>"
+
+		} else if obj["fieldtype"] == "multi_display_select" {
+			html += "<div>"
+			for _, opt := range strings.Split(obj["select_options"], "\n") {
+				pickedChoices := strings.Split(currentOldData, ";")
+				if slices.Index(pickedChoices, opt) != -1 {
+					html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' checked /> %s", obj["name"], 
+						obj["name"], opt, opt)
+
+				} else {
+					html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+						obj["name"], opt, opt)
+				}
+			}
+			html += "</div>"
+		} else if obj["fieldtype"] == "single_display_select" {
+			html += "<div>"
+			for _, opt := range strings.Split(obj["select_options"], "\n") {
+				if opt == currentOldData {
+					html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' checked /> %s", obj["name"], 
+						obj["name"], opt, opt)
+				} else {
+					html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+						obj["name"], opt, opt)	
+				}
+				
+			}
+			html += "</div>"
+
 		} else if obj["fieldtype"] == "text" {
 			html += fmt.Sprintf("<textarea id='id_%s' name='%s'", obj["name"], obj["name"])
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
 			}
 			html += ">" + currentOldData + "<textarea/>"
+		} else if obj["fieldtype"] == "check" {
+			checkedStr := ""
+			if currentOldData == "on" || currentOldData == "true" || currentOldData == "yes" {
+				checkedStr = "checked"
+			}
+			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' %s/> %s", obj["name"], 
+				obj["name"], checkedStr, obj["label"])
 		}
 		html += "</div>"
 	}
