@@ -102,6 +102,8 @@ type F8Object struct {
 	FlaarumClient   flaarum.Client
 }
 
+// creates tables for all formObjects and returns a struct
+// this must be ran before using any other function in this library.
 func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
 	if !doesPathExists(formObjectsPath) {
 		return F8Object{}, errors.New(fmt.Sprintf("formsObjectPath %s does not exists.", formObjectsPath))
@@ -283,7 +285,12 @@ func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[str
 			return nil, errors.New(fmt.Sprintf("field %s is required.", obj["fieldtype"]))
 		}
 
-		ret[ obj["name"] ] = tmpValue
+		if obj["fieldtype"] == "multi_display_select" {
+			r.ParseForm()
+			ret[ obj["name"] ] = strings.Join(r.Form[ obj["name"] ], ";")
+		} else {
+			ret[ obj["name"] ] = tmpValue			
+		}
 	}
 
 	return ret, nil
