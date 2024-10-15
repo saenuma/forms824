@@ -7,6 +7,7 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"net/http"
 
 	"github.com/pkg/errors"
 	"github.com/saenuma/flaarum"
@@ -159,7 +160,7 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 		if ok {
 			currentOldData = tmpValue
 		}
-		
+
 		html += "<div>"
 		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
 		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
@@ -195,3 +196,23 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 
 	return html, nil
 }
+
+func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[string]string, error) {
+	formObjects, err := f8o.getFormObjects(formName)
+	if err != nil {
+		return nil, err
+	}
+
+	ret := make(map[string]string)
+	for _, obj := range formObjects {
+		tmpValue := r.FormValue(obj["name"])
+		isRequired :=  slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1
+		if isRequired && len(tmpValue) == 0 {
+			return nil, errors.New(fmt.Sprintf("field %s is required.", obj["fieldtype"]))
+		}
+
+		ret[ obj["name"] ] = tmpValue
+	}
+
+	return ret, nil
+} 
