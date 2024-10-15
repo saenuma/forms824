@@ -20,24 +20,49 @@ func doesPathExists(p string) bool {
 	return true
 }
 
-func getFlaarumStmt(p string) string {
-	rawJSON, err := os.ReadFile(p)
-	if err != nil {
-		fmt.Println(err)
-		return ""
+func getFormObjects(formObjectsPath, formName string) ([]map[string]string, error) {
+	if !strings.HasSuffix(formName, ".f8p") {
+		formName += ".f8p"
 	}
+	formPath := filepath.Join(formObjectsPath, formName)
+
+	rawJSON, err := os.ReadFile(formPath)
+	if err != nil {
+		return nil, errors.Wrap(err, "json error")
+	}
+
 	formObjects := make([]map[string]string, 0)
 	json.Unmarshal(rawJSON, &formObjects)
 
-	tableName := strings.ReplaceAll(filepath.Base(p), ".f8p", "")
+	return formObjects, nil
+}
+
+func getFlaarumStmt(formObjectsPath, formName string) string {
+	formObjects, err := getFormObjects(formObjectsPath, formName)
+	if err != nil {
+		return ""
+	}
+
+	tableName := strings.ReplaceAll(formName, ".f8p", "")
 	stmt := "table: " + tableName + "\n"
 	stmt += "fields:\n"
+
+	hasForeignKeys := false
+	var stmtSuffix string
 	for _, obj := range formObjects {
 		var flaarumField string
-		if slices.Index([]string{"email", "select", "string", "date", "datetime"}, obj["fieldtype"]) != -1 {
+		stringLikeFields := []string{"email", "select", "string", "date", "datetime", 
+			"multi_display_select", "single_display_select", "check"}
+		if slices.Index(stringLikeFields, obj["fieldtype"]) != -1 {
 			flaarumField = "string"
 		} else if obj["fieldtype"] == "number" {
 			flaarumField = "int"
+
+			if val, ok := obj["linked_table"]; ok{
+				hasForeignKeys = true
+				stmtSuffix += fmt.Sprintf("%s %s on_delete_delete \n", obj["name"], val)
+			}
+
 		} else if obj["fieldtype"] == "text" {
 			flaarumField = "text"
 		}
@@ -46,8 +71,31 @@ func getFlaarumStmt(p string) string {
 	}
 	stmt += "::"
 
+	if hasForeignKeys {
+		stmt += "foreign_keys:\n" + stmt + "\n::"
+	}
+
 	return stmt
 }
+
+
+func getForeignKey(formObjectsPath, formName string) string {
+	formObjects, err := getFormObjects(formObjectsPath, formName)
+	if err != nil {
+		return ""
+	}
+
+	for _, obj := range formObjects {
+		if obj["fieldtype"] == "number" {
+			if val, ok := obj["linked_table"]; ok {
+				return val
+			}
+		}
+	}
+
+	return ""
+}
+
 
 type F8Object struct {
 	FormsObjectPath string
@@ -68,39 +116,63 @@ func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
 		return F8Object{}, errors.Wrap(err, "os error")
 	}
 
+	// look for dependent tables
+	allTables := make([]string, 0)
+	linkedToTables := make([]string, 0)
+
 	for _, dirFI := range dirFIs {
-		if strings.HasSuffix(dirFI.Name(), ".f8p") {
-			stmt := getFlaarumStmt(filepath.Join(formObjectsPath, dirFI.Name()))
-			err = cl.CreateOrUpdateTable(stmt)
-			if err != nil {
-				fmt.Println(err)
-			}
+		if !strings.HasSuffix(dirFI.Name(), ".f8p") {
+			continue
+		}
+
+		allTables = append(allTables, strings.ReplaceAll(dirFI.Name(), ".f8p", ""))
+		linkedToTable := getForeignKey(formObjectsPath, dirFI.Name())
+		linkedToTable = strings.ReplaceAll(linkedToTable, ".f8p", "")
+
+		if len(linkedToTable) != 0 {
+			linkedToTables = append(linkedToTables, linkedToTable)
 		}
 	}
+
+	// validating if all linked-to-tables exists
+	for _, table := range linkedToTables {
+		if slices.Index(allTables, table) != -1 {
+			continue
+		}
+
+		tablesOnFlaarum, err := cl.ListTables()
+		if err != nil {
+			return F8Object{}, errors.Wrap(err, "flaarum error")
+		}
+		if slices.Index(tablesOnFlaarum, table) == -1 {
+			return F8Object{}, errors.New(fmt.Sprintf("the linked-to-table '%s' is not on flaarum or list of form objects", table))
+		}
+	}
+
+	// making sure linked-to-tables are created first
+	lowerOrderTables := make([]string, 0)
+	for _, table := range allTables {
+		if slices.Index(linkedToTables, table) == -1 {
+			lowerOrderTables = append(lowerOrderTables, table)
+		}
+	}
+
+	for _, table := range append(linkedToTables, lowerOrderTables...) {
+		stmt := getFlaarumStmt(formObjectsPath, table + ".f8p")
+		err = cl.CreateOrUpdateTable(stmt)
+		if err != nil {
+			fmt.Println(err)
+			return F8Object{formObjectsPath, cl}, errors.Wrap(err, "flaarum error")
+		}		
+	}
+
 
 	return F8Object{formObjectsPath, cl}, nil
 }
 
-func (f8o *F8Object) getFormObjects(formName string) ([]map[string]string, error) {
-	if !strings.HasSuffix(formName, ".f8p") {
-		formName += ".f8p"
-	}
-	formPath := filepath.Join(f8o.FormsObjectPath, formName)
-
-	rawJSON, err := os.ReadFile(formPath)
-	if err != nil {
-		return nil, errors.Wrap(err, "json error")
-	}
-
-	formObjects := make([]map[string]string, 0)
-	json.Unmarshal(rawJSON, &formObjects)
-
-	return formObjects, nil
-}
-
 func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 
-	formObjects, err := f8o.getFormObjects(formName)
+	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
 	if err != nil {
 		return "", err
 	}
@@ -145,7 +217,7 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 
 
 func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (string, error) {
-	formObjects, err := f8o.getFormObjects(formName)
+	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
 	if err != nil {
 		return "", err
 	}
@@ -198,7 +270,7 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 }
 
 func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[string]string, error) {
-	formObjects, err := f8o.getFormObjects(formName)
+	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
 	if err != nil {
 		return nil, err
 	}
