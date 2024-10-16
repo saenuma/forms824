@@ -13,3 +13,7 @@ though with a lot of perfection.
 ## Where do I create the form description
 
 Use [forms814](https://snapcraft.io/forms814)
+
+## Dependency 
+* [flaarum](https://snapcraft.io/flaarum) with documentation [here](https://sae.ng/flaarumtuts/intro)
+

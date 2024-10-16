@@ -8,6 +8,7 @@ import (
 	"slices"
 	"strings"
 	"net/http"
+	"strconv"
 
 	"github.com/pkg/errors"
 	"github.com/saenuma/flaarum"
@@ -98,7 +99,7 @@ func getForeignKey(formObjectsPath, formName string) string {
 
 
 type F8Object struct {
-	FormsObjectPath string
+	FormsPath string
 	FlaarumClient   flaarum.Client
 }
 
@@ -106,7 +107,7 @@ type F8Object struct {
 // this must be ran before using any other function in this library.
 func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
 	if !doesPathExists(formObjectsPath) {
-		return F8Object{}, errors.New(fmt.Sprintf("formsObjectPath %s does not exists.", formObjectsPath))
+		return F8Object{}, errors.New(fmt.Sprintf("FormsPath %s does not exists.", formObjectsPath))
 	}
 
 	if err := cl.Ping(); err != nil {
@@ -172,9 +173,26 @@ func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
 	return F8Object{formObjectsPath, cl}, nil
 }
 
+func (f8o *F8Object) ListForms() ([]string, error) {
+	dirFIs, err := os.ReadDir(f8o.FormsPath)
+	if err != nil {
+		return []string{}, errors.Wrap(err, "os error")
+	}
+
+	allTables := make([]string, 0)
+	for _, dirFI := range dirFIs {
+		if !strings.HasSuffix(dirFI.Name(), ".f8p") {
+			continue
+		}
+
+		allTables = append(allTables, strings.ReplaceAll(dirFI.Name(), ".f8p", ""))
+	}
+	return allTables, nil
+}
+
 func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 
-	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
+	formObjects, err := getFormObjects(f8o.FormsPath, formName)
 	if err != nil {
 		return "", err
 	}
@@ -238,7 +256,7 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
 			}
-			html += "><textarea/>"
+			html += "></textarea>"
 		} else if obj["fieldtype"] == "check" {
 			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' /> %s", obj["name"], 
 				obj["name"], obj["label"])
@@ -250,10 +268,19 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 }
 
 
-func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (string, error) {
-	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
+func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) {
+	formObjects, err := getFormObjects(f8o.FormsPath, formName)
 	if err != nil {
 		return "", err
+	}
+
+	oldData, err := f8o.FlaarumClient.SearchForOne(fmt.Sprintf(`
+		table: %s
+		where:
+			id = %d
+		`, formName, dataId))
+	if err != nil {
+		return "", errors.Wrap(err, "flaarum error")
 	}
 
 	var html string
@@ -262,9 +289,14 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 			continue
 		}
 		var currentOldData string
-		tmpValue, ok := oldData[obj["name"]]
+		tmpValue, ok := (*oldData)[obj["name"]]
 		if ok {
-			currentOldData = tmpValue
+			switch val := tmpValue.(type) {
+			case int64:
+				currentOldData = strconv.FormatInt(val, 10)
+			case string:
+				currentOldData = val
+			}
 		}
 
 		html += "<div>"
@@ -338,7 +370,7 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
 				html += " required"
 			}
-			html += ">" + currentOldData + "<textarea/>"
+			html += ">" + currentOldData + "</textarea>"
 		} else if obj["fieldtype"] == "check" {
 			checkedStr := ""
 			if currentOldData == "on" || currentOldData == "true" || currentOldData == "yes" {
@@ -355,7 +387,7 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 
 // multi_display_select returns a string joined by ';' because this field can have a list as its value
 func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[string]string, error) {
-	formObjects, err := getFormObjects(f8o.FormsObjectPath, formName)
+	formObjects, err := getFormObjects(f8o.FormsPath, formName)
 	if err != nil {
 		return nil, err
 	}
