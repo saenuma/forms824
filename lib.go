@@ -55,10 +55,10 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 			"multi_display_select", "single_display_select", "check"}
 		if slices.Index(stringLikeFields, obj["fieldtype"]) != -1 {
 			flaarumField = "string"
-		} else if obj["fieldtype"] == "number" {
+		} else if obj["fieldtype"] == "int" {
 			flaarumField = "int"
 
-			if val, ok := obj["linked_table"]; ok{
+			if val, ok := obj["linked_table"]; ok && len(val) != 0 {
 				hasForeignKeys = true
 				stmtSuffix += fmt.Sprintf("%s %s on_delete_delete \n", obj["name"], val)
 			}
@@ -86,7 +86,7 @@ func getForeignKey(formObjectsPath, formName string) string {
 	}
 
 	for _, obj := range formObjects {
-		if obj["fieldtype"] == "number" {
+		if obj["fieldtype"] == "int" {
 			if val, ok := obj["linked_table"]; ok {
 				return val
 			}
@@ -187,10 +187,21 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 
 		html += "<div>"
 		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
-		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
+
+		if obj["fieldtype"] == "int" {
+			html += fmt.Sprintf("<input type='number' name='%s' id='id_%s' min='%s' max='%s' ",
+				obj["name"], obj["name"], obj["min_value"], obj["max_value"])
+			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
+				html += " required"
+			}
+			html += "/>"
+		} else if slices.Index([]string{"string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
 			fieldType := obj["fieldtype"]
 			if fieldType == "datetime" {
 				fieldType += "-local"
+			}
+			if fieldType == "string" {
+				fieldType = "text"
 			}
 			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' ", fieldType,
 				obj["name"], obj["name"])
@@ -258,10 +269,20 @@ func (f8o *F8Object) GetEditForm(formName string, oldData map[string]string) (st
 
 		html += "<div>"
 		html += fmt.Sprintf("<div><label for='id_%s'>%s</label></div>", obj["name"], obj["label"])
-		if slices.Index([]string{"number", "string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
+		if obj["fieldtype"] == "int" {
+			html += fmt.Sprintf("<input type='number' name='%s' id='id_%s' min='%s' max='%s' value='%s'",
+				obj["name"], obj["name"], obj["min_value"], obj["max_value"], currentOldData)
+			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
+				html += " required"
+			}
+			html += "/>"
+		} else if slices.Index([]string{"string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
 			fieldType := obj["fieldtype"]
 			if fieldType == "datetime" {
 				fieldType += "-local"
+			}
+			if fieldType == "string" {
+				fieldType = "text"
 			}
 			html += fmt.Sprintf("<input type='%s' name='%s' id='id_%s' value='%s'", fieldType,
 				obj["name"], obj["name"], currentOldData)
