@@ -68,6 +68,10 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 			flaarumField = "text"
 		}
 		attribs := strings.Split(obj["attributes"], ";")
+		if slices.Index(attribs, "hidden") != -1 {
+			hiddenAttribIndex := slices.Index(attribs, "hidden")
+			attribs = slices.Delete(attribs, hiddenAttribIndex, hiddenAttribIndex+1)
+		}
 		stmt += fmt.Sprintf("%s %s %s\n", obj["name"], flaarumField, strings.Join(attribs, " "))
 	}
 	stmt += "::"
