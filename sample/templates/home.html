@@ -14,8 +14,10 @@
     <p>forms824 is a library that helps to quickly build forms accompanied with the tables</p>
 
     <ol>
-      <li><a href="/insert/agethings">age form</a></li>
-      <li><a href="/insert/workthings">workplace form</a></li>
+      {{range .Forms}}
+        <li><a href="/insert/{{.}}">{{.}}</a></li>
+      {{end}}
+
     </ol>
   </div>
 </html>

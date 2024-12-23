@@ -1,14 +1,14 @@
 package main
 
 import (
-	"os"
 	"fmt"
-	"net/http"
 	"html/template"
+	"net/http"
+	"os"
 	"strconv"
 
-	"github.com/saenuma/forms824"
 	"github.com/saenuma/flaarum"
+	"github.com/saenuma/forms824"
 )
 
 func main() {
@@ -24,11 +24,21 @@ func main() {
 			return
 		}
 
+		forms, err := f8cl.ListForms()
+		if err != nil {
+			fmt.Fprintf(w, "error with forms")
+			return
+		}
+
+		type Ctx struct {
+			Forms []string
+		}
+
 		tmpl := template.Must(template.ParseFiles("templates/home.html"))
-		tmpl.Execute(w, nil)
+		tmpl.Execute(w, Ctx{forms})
 	})
 
-	http.HandleFunc("/insert/{form}", func(w http.ResponseWriter, r * http.Request) {
+	http.HandleFunc("/insert/{form}", func(w http.ResponseWriter, r *http.Request) {
 		formName := r.PathValue("form")
 
 		if r.Method == http.MethodGet {
@@ -58,7 +68,7 @@ func main() {
 
 	})
 
-	http.HandleFunc("/edit/{form}/{id}", func(w http.ResponseWriter, r * http.Request) {
+	http.HandleFunc("/edit/{form}/{id}", func(w http.ResponseWriter, r *http.Request) {
 		formName := r.PathValue("form")
 		dataIdStr := r.PathValue("id")
 		dataId, err := strconv.ParseInt(dataIdStr, 10, 64)
@@ -73,7 +83,7 @@ func main() {
 			}
 			type RCtx struct {
 				FormName string
-				DataId int64
+				DataId   int64
 				FormHTML template.HTML
 			}
 			tmpl := template.Must(template.ParseFiles("templates/edit.html"))
