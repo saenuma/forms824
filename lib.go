@@ -3,12 +3,12 @@ package forms824
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
-	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/pkg/errors"
 	"github.com/saenuma/flaarum"
@@ -52,7 +52,7 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 	var stmtSuffix string
 	for _, obj := range formObjects {
 		var flaarumField string
-		stringLikeFields := []string{"email", "select", "string", "date", "datetime", 
+		stringLikeFields := []string{"email", "select", "string", "date", "datetime",
 			"multi_display_select", "single_display_select", "check"}
 		if slices.Index(stringLikeFields, obj["fieldtype"]) != -1 {
 			flaarumField = "string"
@@ -66,7 +66,10 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 
 		} else if obj["fieldtype"] == "text" {
 			flaarumField = "text"
+		} else if obj["fieldtype"] == "float" {
+			flaarumField = "float"
 		}
+
 		attribs := strings.Split(obj["attributes"], ";")
 		if slices.Index(attribs, "hidden") != -1 {
 			hiddenAttribIndex := slices.Index(attribs, "hidden")
@@ -82,7 +85,6 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 
 	return stmt
 }
-
 
 func getForeignKey(formObjectsPath, formName string) string {
 	formObjects, err := getFormObjects(formObjectsPath, formName)
@@ -101,10 +103,9 @@ func getForeignKey(formObjectsPath, formName string) string {
 	return ""
 }
 
-
 type F8Object struct {
-	FormsPath string
-	FlaarumClient   flaarum.Client
+	FormsPath     string
+	FlaarumClient flaarum.Client
 }
 
 // creates tables for all formObjects and returns a struct
@@ -165,14 +166,13 @@ func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
 	}
 
 	for _, table := range append(linkedToTables, lowerOrderTables...) {
-		stmt := getFlaarumStmt(formObjectsPath, table + ".f8p")
+		stmt := getFlaarumStmt(formObjectsPath, table+".f8p")
 		err = cl.CreateOrUpdateTable(stmt)
 		if err != nil {
 			fmt.Println(err)
 			return F8Object{formObjectsPath, cl}, errors.Wrap(err, "flaarum error")
-		}		
+		}
 	}
-
 
 	return F8Object{formObjectsPath, cl}, nil
 }
@@ -217,6 +217,14 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 				html += " required"
 			}
 			html += "/>"
+		} else if obj["fieldtype"] == "float" {
+			html += fmt.Sprintf("<input type='number' name='%s' id='id_%s' min='%s' max='%s' step='0.0001'",
+				obj["name"], obj["name"], obj["min_value"], obj["max_value"])
+			if slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1 {
+				html += " required"
+			}
+			html += "/>"
+
 		} else if slices.Index([]string{"string", "email", "date", "datetime"}, obj["fieldtype"]) != -1 {
 			fieldType := obj["fieldtype"]
 			if fieldType == "datetime" {
@@ -244,14 +252,14 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 		} else if obj["fieldtype"] == "multi_display_select" {
 			html += "<div>"
 			for _, opt := range strings.Split(obj["select_options"], "\n") {
-				html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+				html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' /> %s", obj["name"],
 					obj["name"], opt, opt)
 			}
 			html += "</div>"
 		} else if obj["fieldtype"] == "single_display_select" {
 			html += "<div>"
 			for _, opt := range strings.Split(obj["select_options"], "\n") {
-				html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+				html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' /> %s", obj["name"],
 					obj["name"], opt, opt)
 			}
 			html += "</div>"
@@ -262,7 +270,7 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 			}
 			html += "></textarea>"
 		} else if obj["fieldtype"] == "check" {
-			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' /> %s", obj["name"], 
+			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' /> %s", obj["name"],
 				obj["name"], obj["label"])
 		}
 		html += "</div>"
@@ -270,7 +278,6 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 
 	return html, nil
 }
-
 
 func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) {
 	formObjects, err := getFormObjects(f8o.FormsPath, formName)
@@ -336,7 +343,7 @@ func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) 
 				if opt == currentOldData {
 					html += "<option selected='true'>" + opt + "</option>"
 				} else {
-					html += "<option>" + opt + "</option>"					
+					html += "<option>" + opt + "</option>"
 				}
 			}
 			html += "</select>"
@@ -346,11 +353,11 @@ func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) 
 			for _, opt := range strings.Split(obj["select_options"], "\n") {
 				pickedChoices := strings.Split(currentOldData, ";")
 				if slices.Index(pickedChoices, opt) != -1 {
-					html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' checked /> %s", obj["name"], 
+					html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' checked /> %s", obj["name"],
 						obj["name"], opt, opt)
 
 				} else {
-					html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
+					html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' value='%s' /> %s", obj["name"],
 						obj["name"], opt, opt)
 				}
 			}
@@ -359,13 +366,13 @@ func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) 
 			html += "<div>"
 			for _, opt := range strings.Split(obj["select_options"], "\n") {
 				if opt == currentOldData {
-					html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' checked /> %s", obj["name"], 
+					html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' checked /> %s", obj["name"],
 						obj["name"], opt, opt)
 				} else {
-					html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' /> %s", obj["name"], 
-						obj["name"], opt, opt)	
+					html += fmt.Sprintf("<input type='radio' id='id_%s' name='%s' value='%s' /> %s", obj["name"],
+						obj["name"], opt, opt)
 				}
-				
+
 			}
 			html += "</div>"
 
@@ -380,7 +387,7 @@ func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) 
 			if currentOldData == "on" || currentOldData == "true" || currentOldData == "yes" {
 				checkedStr = "checked"
 			}
-			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' %s/> %s", obj["name"], 
+			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' %s/> %s", obj["name"],
 				obj["name"], checkedStr, obj["label"])
 		}
 		html += "</div>"
@@ -399,18 +406,18 @@ func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[str
 	ret := make(map[string]string)
 	for _, obj := range formObjects {
 		tmpValue := r.FormValue(obj["name"])
-		isRequired :=  slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1
+		isRequired := slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1
 		if isRequired && len(tmpValue) == 0 {
 			return nil, errors.New(fmt.Sprintf("field %s is required.", obj["fieldtype"]))
 		}
 
 		if obj["fieldtype"] == "multi_display_select" {
 			r.ParseForm()
-			ret[ obj["name"] ] = strings.Join(r.Form[ obj["name"] ], ";")
+			ret[obj["name"]] = strings.Join(r.Form[obj["name"]], ";")
 		} else {
-			ret[ obj["name"] ] = tmpValue			
+			ret[obj["name"]] = tmpValue
 		}
 	}
 
 	return ret, nil
-} 
+}
