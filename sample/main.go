@@ -7,12 +7,12 @@ import (
 	"os"
 	"strconv"
 
-	"github.com/saenuma/flaarum"
+	"github.com/saenuma/flaarumlib"
 	"github.com/saenuma/forms824"
 )
 
 func main() {
-	cl := flaarum.NewClient("127.0.0.1", "not-yet-ready", "f8proj")
+	cl := flaarumlib.NewClient("127.0.0.1", "not-yet-ready", "f8proj")
 	f8cl, err := forms824.Init("forms", cl)
 	if err != nil {
 		panic(err)
