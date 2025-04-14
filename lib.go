@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/pkg/errors"
-	"github.com/saenuma/flaarum"
+	"github.com/saenuma/flaarumlib"
 )
 
 func doesPathExists(p string) bool {
@@ -105,12 +105,12 @@ func getForeignKey(formObjectsPath, formName string) string {
 
 type F8Object struct {
 	FormsPath     string
-	FlaarumClient flaarum.Client
+	FlaarumClient flaarumlib.Client
 }
 
 // creates tables for all formObjects and returns a struct
 // this must be ran before using any other function in this library.
-func Init(formObjectsPath string, cl flaarum.Client) (F8Object, error) {
+func Init(formObjectsPath string, cl flaarumlib.Client) (F8Object, error) {
 	if !doesPathExists(formObjectsPath) {
 		return F8Object{}, errors.New(fmt.Sprintf("FormsPath %s does not exists.", formObjectsPath))
 	}
