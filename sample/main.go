@@ -56,11 +56,13 @@ func main() {
 		} else {
 			toWrite, err := f8cl.GetSubmittedData(r, formName)
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(w, "%+v", err)
+				return
 			}
 			retId, err := cl.InsertRowStr(formName, toWrite)
 			if err != nil {
-				panic(err)
+				fmt.Fprintf(w, "%+v", err)
+				return
 			}
 
 			fmt.Fprintf(w, "done. id #%d", retId)

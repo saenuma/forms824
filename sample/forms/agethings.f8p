@@ -1,1 +1,24 @@
-[{"attributes":"required","fieldtype":"int","label":"Your true age","linked_table":"","max_value":"65","min_value":"30","name":"age"},{"attributes":"required","fieldtype":"string","label":"Name of document supporting your age","name":"age_proof"},{"attributes":"","fieldtype":"select","label":"Category of your age","name":"age_category","select_options":"young\nmiddle\nelderly"}]
+[
+  {
+    "attributes": "required",
+    "fieldtype": "int",
+    "label": "Your true age",
+    "linked_table": "",
+    "max_value": "65",
+    "min_value": "30",
+    "name": "age"
+  },
+  {
+    "attributes": "required",
+    "fieldtype": "string",
+    "label": "Name of document supporting your age",
+    "name": "age_proof"
+  },
+  {
+    "attributes": "",
+    "fieldtype": "select",
+    "label": "Category of your age",
+    "name": "age_category",
+    "select_options": "young\nmiddle\nelderly"
+  }
+]

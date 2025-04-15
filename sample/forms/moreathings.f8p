@@ -1,0 +1,23 @@
+[
+  {
+    "attributes": "required",
+    "fieldtype": "int",
+    "label": "Age things id",
+    "linked_table": "agethings",
+    "max_value": "",
+    "min_value": "",
+    "name": "atid"
+  },
+  {
+    "attributes": "required",
+    "fieldtype": "text",
+    "label": "Description",
+    "name": "desc"
+  },
+  {
+    "attributes": "required",
+    "fieldtype": "date",
+    "label": "Date of this Inclusion",
+    "name": "added_date"
+  }
+]

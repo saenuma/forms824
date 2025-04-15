@@ -1,1 +1,27 @@
-[{"attributes":"required","fieldtype":"string","label":"Name of your workplace","name":"workplace"},{"attributes":"required","fieldtype":"string","label":"The name of your position which describes your duties","name":"position"},{"attributes":"","fieldtype":"text","label":"The summary of your duties","name":"duties"},{"attributes":"","fieldtype":"single_display_select","label":"Rate your workplace from A-F","name":"rating","select_options":"A\nB\nC\nD\nE\nF"}]
+[
+  {
+    "attributes": "required",
+    "fieldtype": "string",
+    "label": "Name of your workplace",
+    "name": "workplace"
+  },
+  {
+    "attributes": "required",
+    "fieldtype": "string",
+    "label": "The name of your position which describes your duties",
+    "name": "position"
+  },
+  {
+    "attributes": "",
+    "fieldtype": "text",
+    "label": "The summary of your duties",
+    "name": "duties"
+  },
+  {
+    "attributes": "",
+    "fieldtype": "single_display_select",
+    "label": "Rate your workplace from A-F",
+    "name": "rating",
+    "select_options": "A\nB\nC\nD\nE\nF"
+  }
+]

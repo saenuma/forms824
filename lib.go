@@ -80,7 +80,7 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 	stmt += "::"
 
 	if hasForeignKeys {
-		stmt += "foreign_keys:\n" + stmt + "\n::"
+		stmt += "foreign_keys:\n" + stmtSuffix + "\n::"
 	}
 
 	return stmt
