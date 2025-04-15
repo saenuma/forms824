@@ -407,8 +407,9 @@ func (f8o *F8Object) GetSubmittedData(r *http.Request, formName string) (map[str
 	for _, obj := range formObjects {
 		tmpValue := r.FormValue(obj["name"])
 		isRequired := slices.Index(strings.Split(obj["attributes"], ";"), "required") != -1
-		if isRequired && len(tmpValue) == 0 {
-			return nil, errors.New(fmt.Sprintf("field %s is required.", obj["fieldtype"]))
+		isHidden := slices.Index(strings.Split(obj["attributes"], ";"), "hidden") != -1
+		if isRequired && len(tmpValue) == 0 && !isHidden {
+			return nil, errors.New(fmt.Sprintf("field %s (%s) is required.", obj["name"], obj["fieldtype"]))
 		}
 
 		if obj["fieldtype"] == "multi_display_select" {
