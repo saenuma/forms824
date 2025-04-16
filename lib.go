@@ -52,9 +52,9 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 	var stmtSuffix string
 	for _, obj := range formObjects {
 		var flaarumField string
-		stringLikeFields := []string{"email", "select", "string", "date", "datetime",
-			"multi_display_select", "single_display_select", "check"}
-		if slices.Index(stringLikeFields, obj["fieldtype"]) != -1 {
+		stringLikeFields := []string{"email", "select", "string", "multi_display_select",
+			"single_display_select", "check"}
+		if slices.Contains(stringLikeFields, obj["fieldtype"]) {
 			flaarumField = "string"
 		} else if obj["fieldtype"] == "int" {
 			flaarumField = "int"
@@ -68,6 +68,10 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 			flaarumField = "text"
 		} else if obj["fieldtype"] == "float" {
 			flaarumField = "float"
+		} else if obj["fieldtype"] == "date" {
+			flaarumField = "date"
+		} else if obj["fieldtype"] == "datetime" {
+			flaarumField = "datetime"
 		}
 
 		attribs := strings.Split(obj["attributes"], ";")
@@ -80,7 +84,7 @@ func getFlaarumStmt(formObjectsPath, formName string) string {
 	stmt += "::"
 
 	if hasForeignKeys {
-		stmt += "foreign_keys:\n" + stmtSuffix + "\n::"
+		stmt += "\nforeign_keys:\n" + stmtSuffix + "\n::"
 	}
 
 	return stmt
