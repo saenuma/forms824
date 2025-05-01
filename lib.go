@@ -148,7 +148,7 @@ func Init(formObjectsPath string, cl flaarumlib.Client) (F8Object, error) {
 
 	// validating if all linked-to-tables exists
 	for _, table := range linkedToTables {
-		if slices.Index(allTables, table) != -1 {
+		if slices.Contains(allTables, table) {
 			continue
 		}
 
@@ -156,7 +156,7 @@ func Init(formObjectsPath string, cl flaarumlib.Client) (F8Object, error) {
 		if err != nil {
 			return F8Object{}, errors.Wrap(err, "flaarum error")
 		}
-		if slices.Index(tablesOnFlaarum, table) == -1 {
+		if !slices.Contains(tablesOnFlaarum, table) {
 			return F8Object{}, errors.New(fmt.Sprintf("the linked-to-table '%s' is not on flaarum or list of form objects", table))
 		}
 	}
@@ -164,12 +164,20 @@ func Init(formObjectsPath string, cl flaarumlib.Client) (F8Object, error) {
 	// making sure linked-to-tables are created first
 	lowerOrderTables := make([]string, 0)
 	for _, table := range allTables {
-		if slices.Index(linkedToTables, table) == -1 {
+		if !slices.Contains(linkedToTables, table) {
 			lowerOrderTables = append(lowerOrderTables, table)
 		}
 	}
 
-	for _, table := range append(linkedToTables, lowerOrderTables...) {
+	toCreateSlice := make([]string, 0)
+	for _, tblName := range linkedToTables {
+		if slices.Contains(allTables, tblName) {
+			toCreateSlice = append(toCreateSlice, tblName)
+		}
+	}
+	toCreateSlice = append(toCreateSlice, lowerOrderTables...)
+
+	for _, table := range toCreateSlice {
 		stmt := getFlaarumStmt(formObjectsPath, table+".f8p")
 		err = cl.CreateOrUpdateTable(stmt)
 		if err != nil {
