@@ -282,8 +282,8 @@ func (f8o *F8Object) GetNewForm(formName string) (string, error) {
 			}
 			html += "></textarea>"
 		} else if obj["fieldtype"] == "check" {
-			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' /> %s", obj["name"],
-				obj["name"], obj["label"])
+			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' /> ", obj["name"],
+				obj["name"])
 		}
 		html += "</div>"
 	}
@@ -399,8 +399,8 @@ func (f8o *F8Object) GetEditForm(formName string, dataId int64) (string, error) 
 			if currentOldData == "on" || currentOldData == "true" || currentOldData == "yes" {
 				checkedStr = "checked"
 			}
-			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' %s/> %s", obj["name"],
-				obj["name"], checkedStr, obj["label"])
+			html += fmt.Sprintf("<input type='checkbox' id='id_%s' name='%s' %s/>", obj["name"],
+				obj["name"], checkedStr)
 		}
 		html += "</div>"
 	}
