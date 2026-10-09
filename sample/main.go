@@ -12,7 +12,16 @@ import (
 )
 
 func main() {
-	cl := flaarumlib.NewClient("f8proj")
+	cl, err := flaarumlib.NewClient("f8proj", "z7bvs29bgrunp7yh7oz5") // use your own key: gotten from flaarum.cli mfk
+	if err != nil {
+		panic(err)
+	}
+
+	err = cl.Ping()
+	if err != nil {
+		panic(err)
+	}
+
 	f8cl, err := forms824.Init("forms", cl)
 	if err != nil {
 		panic(err)

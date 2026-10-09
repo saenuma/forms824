@@ -6,5 +6,5 @@ toolchain go1.24.1
 
 require (
 	github.com/pkg/errors v0.9.1
-	github.com/saenuma/flaarumlib v0.0.0-20260121201823-8bb9a7189e13
+	github.com/saenuma/flaarumlib v0.0.0-20261002144756-41731b9973b1
 )
