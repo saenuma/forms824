@@ -2,3 +2,5 @@ github.com/pkg/errors v0.9.1 h1:FEBLx1zS214owpjy7qsBeixbURkuhQAwrK5UwLGTwt4=
 github.com/pkg/errors v0.9.1/go.mod h1:bwawxfHBFNV+L2hUp1rHADufV3IMtnDRdf1r5NINEl0=
 github.com/saenuma/flaarumlib v0.0.0-20261002144756-41731b9973b1 h1:JM81IjrgltyrBlnHTnOUEZNmPUTDs8Rcb4VLnBOJjvA=
 github.com/saenuma/flaarumlib v0.0.0-20261002144756-41731b9973b1/go.mod h1:M7iUcW3HujhMko4bdiCIvO0im5m4G2bu/byQgURHhB0=
+github.com/saenuma/flaarumlib v0.0.0-20261010104355-584fdcd8761f h1:eJd53PijytdWMEzfwtFDcWsqg6p+gVUGuSFvmmwwkpk=
+github.com/saenuma/flaarumlib v0.0.0-20261010104355-584fdcd8761f/go.mod h1:M7iUcW3HujhMko4bdiCIvO0im5m4G2bu/byQgURHhB0=
