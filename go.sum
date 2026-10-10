@@ -4,3 +4,5 @@ github.com/saenuma/flaarumlib v0.0.0-20261002144756-41731b9973b1 h1:JM81Ijrgltyr
 github.com/saenuma/flaarumlib v0.0.0-20261002144756-41731b9973b1/go.mod h1:M7iUcW3HujhMko4bdiCIvO0im5m4G2bu/byQgURHhB0=
 github.com/saenuma/flaarumlib v0.0.0-20261010104355-584fdcd8761f h1:eJd53PijytdWMEzfwtFDcWsqg6p+gVUGuSFvmmwwkpk=
 github.com/saenuma/flaarumlib v0.0.0-20261010104355-584fdcd8761f/go.mod h1:M7iUcW3HujhMko4bdiCIvO0im5m4G2bu/byQgURHhB0=
+github.com/saenuma/flaarumlib v0.0.0-20261010105038-29f1fe128134 h1:8mD66pbOag35oBuXDctytVn0xZhYccjTchQSHxvZ7Jw=
+github.com/saenuma/flaarumlib v0.0.0-20261010105038-29f1fe128134/go.mod h1:M7iUcW3HujhMko4bdiCIvO0im5m4G2bu/byQgURHhB0=
